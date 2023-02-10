@@ -99,32 +99,22 @@ public class Emulator {
         programCounter = 0;
     }
 
-    /**
-     * Runs all remaining instructions from the current program counter.
-     */
-    public void emulate() {
-        while (programCounter < instructions.size()) {
-            emulateOneInstruction();
-        }
+    public List<Instruction> instructions() {
+        return instructions;
     }
 
-    /**
-     * Runs N instructions from the current program counter.
-     *
-     * @param n how many instructions to run from the current program counter
-     */
-    public void emulateNInstructions(final int n) {
-        int executed = 0;
-        while (executed < n) {
-            emulateOneInstruction();
-            executed++;
-        }
+    public boolean hasMoreInstructions() {
+        return programCounter < instructions.size();
+    }
+
+    public int programCounter() {
+        return programCounter;
     }
 
     /**
      * Runs a single instruction pointed to by the current program counter.
      */
-    public void emulateOneInstruction() {
+    public Instruction emulateOneInstruction() {
         final Instruction currentInstruction = instructions.get(programCounter);
 
         if (currentInstruction instanceof RFormatInstruction inst) {
@@ -140,7 +130,7 @@ public class Emulator {
                 case SLT -> writeRegister(inst.rd(), rs < rt ? 1 : 0);
                 case JR -> {
                     programCounter = rs;
-                    return;
+                    return inst;
                 }
             }
         } else if (currentInstruction instanceof IFormatInstruction inst) {
@@ -152,13 +142,13 @@ public class Emulator {
                 case BEQ -> {
                     if (rs == rt) {
                         programCounter += 1 + inst.imm();
-                        return;
+                        return inst;
                     }
                 }
                 case BNE -> {
                     if (rs != rt) {
                         programCounter += 1 + inst.imm();
-                        return;
+                        return inst;
                     }
                 }
                 case LW -> writeRegister(inst.rt(), readMemory(rs + inst.imm()));
@@ -168,16 +158,17 @@ public class Emulator {
             switch (inst.opcode()) {
                 case J -> {
                     programCounter = inst.address();
-                    return;
+                    return inst;
                 }
                 case JAL -> {
                     writeRegister(31, programCounter + 1);
                     programCounter = inst.address();
-                    return;
+                    return inst;
                 }
             }
         }
 
         programCounter++;
+        return currentInstruction;
     }
 }

@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="288de3ff-a09d-4a10-ac45-b5546e6eac74" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/CPUSimulator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lab3_fib.asm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lab3_test3.asm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Assembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Assembler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Emulator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Emulator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/InteractiveRepl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Repl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ScriptInterpreter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lab3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/lab3.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sum_10.asm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Repl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Repl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lab3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/lab4.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,42 +42,42 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/simple/Workspace/school/winter23/csc315/lab3&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/jacobandersen/Workspace/School/Winter 2023/CSC315/lab4",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/test" />
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="lab3" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="lab3" />
+    <configuration name="lab4" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="lab4" />
       <module name="lab3" />
-      <option name="PROGRAM_PARAMETERS" value="run/test/lab3_fib.asm" />
+      <option name="PROGRAM_PARAMETERS" value="lab4_test1.asm" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.lab3" />
+        <item itemvalue="Application.lab4" />
       </list>
     </recent_temporary>
   </component>
@@ -101,6 +97,7 @@
       <workItem from="1675451572862" duration="10340000" />
       <workItem from="1675646087675" duration="4313000" />
       <workItem from="1675703042088" duration="5732000" />
+      <workItem from="1676055823254" duration="2998000" />
     </task>
     <servers />
   </component>

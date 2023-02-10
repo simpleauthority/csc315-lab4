@@ -5,10 +5,10 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 public class Repl {
-    private final Emulator emulator;
+    private final CPUSimulator simulator;
 
-    public Repl(final Emulator emulator) {
-        this.emulator = emulator;
+    public Repl(final CPUSimulator simulator) {
+        this.simulator = simulator;
     }
 
     public final void start() {
@@ -57,7 +57,9 @@ public class Repl {
         switch (command) {
             case 'h' -> displayHelp();
 
-            case 'd' -> emulator.dumpRegisters();
+            case 'd' -> simulator.emulator().dumpRegisters();
+
+            case 'p' -> simulator.dumpPipelineRegisterState();
 
             case 's' -> {
                 int n = 1;
@@ -67,11 +69,10 @@ public class Repl {
                     } catch (NumberFormatException ignored) {}
                 }
 
-                emulator.emulateNInstructions(n);
-                System.out.printf("\t%d instruction(s) executed%n", n);
+                simulator.runNCycles(n);
             }
 
-            case 'r' -> emulator.emulate();
+            case 'r' -> simulator.run();
 
             case 'm' -> {
                 if (commandLine.isEmpty()) break;
@@ -87,11 +88,11 @@ public class Repl {
 
                 }
 
-                emulator.dumpMemory(lower, upper);
+                simulator.emulator().dumpMemory(lower, upper);
             }
 
             case 'c' -> {
-                emulator.reset();
+                simulator.reset();
                 System.out.println("\tSimulator reset");
             }
 
@@ -108,9 +109,10 @@ public class Repl {
                 
                 h = show help
                 d = dump register state
-                s = single step through the program (i.e. execute 1 instruction and stop)
-                s num = step through num instructions of the program
-                r = run until the program ends
+                p = show pipeline registers
+                s = step through a single clock cycle step (i.e. simulate 1 cycle and stop)
+                s num = step through num clock cycles
+                r = run until the program ends and display timing summary
                 m num1 num2 = display data memory from location num1 to num2
                 c = clear all registers, memory, and the program counter to 0
                 q = exit the program

@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class lab3 {
+public class lab4 {
     public static void main(final String[] args) {
-        new lab3().runProgram(args);
+        new lab4().runProgram(args);
     }
 
     public void runProgram(final String[] args) {
@@ -22,7 +22,8 @@ public class lab3 {
         assembler.assemble();
 
         final Emulator emulator = new Emulator(assembler.instructions());
-        final Repl repl = new Repl(emulator);
+        final CPUSimulator simulator = new CPUSimulator(emulator);
+        final Repl repl = new Repl(simulator);
 
         if (args.length < 2) {
             repl.start();
