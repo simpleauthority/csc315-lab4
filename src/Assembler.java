@@ -204,7 +204,10 @@ public class Assembler {
         final List<String> assembled = new ArrayList<>();
 
         for (Instruction instruction : instructions) {
-            assembled.add(instruction.assemble());
+            final String instStr = instruction.assemble();
+            if (instStr != null) {
+                assembled.add(instStr);
+            }
         }
 
         if (hadInvalidInstruction && !invalidInstructionMsg.isBlank()) {

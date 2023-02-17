@@ -20,7 +20,9 @@ public enum Opcode {
     SW(InstructionFormat.I, 0x2B, null),
     J(InstructionFormat.J, 0x2, null),
     JR(InstructionFormat.R, 0x0, 0x8),
-    JAL(InstructionFormat.J, 0x3, null);
+    JAL(InstructionFormat.J, 0x3, null),
+    STALL(null, null, null),
+    SQUASH(null, null, null);
 
     private final InstructionFormat instructionFormat;
     private final Integer opcodeBitPattern;

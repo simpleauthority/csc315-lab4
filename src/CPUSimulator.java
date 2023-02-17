@@ -1,13 +1,11 @@
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Locale;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class CPUSimulator {
     private final Emulator emulator;
-    private Deque<Instruction> pipeline;
+    private final Deque<Instruction> pipeline;
     private int programCounter;
     private int cycles;
 
@@ -21,10 +19,14 @@ public class CPUSimulator {
         final String format = "%-7s\t%-7s\t%-7s\t%-7s\t%-7s\n" +
                 "%-7d\t%-7s\t%-7s\t%-7s\t%-7s\n";
 
-        final String[] plReg = Arrays.stream(pipeline.toArray(new Instruction[4]))
+        final String[] plReg = Arrays.stream(pipelineAsArray())
                 .map(r -> {
                     if (r == null) {
                         return "empty";
+                    } else if (r.opcode() == Opcode.STALL) {
+                        return "stall";
+                    } else if (r.opcode() == Opcode.SQUASH) {
+                        return "squash";
                     } else {
                         return r.opcode().name().toLowerCase(Locale.ROOT);
                     }
@@ -42,42 +44,100 @@ public class CPUSimulator {
 
     public final void run() {
         while (true) {
-            if (!runOneCycle()) break;
+            if (!runOneCycle(false)) break;
         }
 
+        System.out.println();
         System.out.println("Program complete");
         printTimingInformation();
+        System.out.println();
     }
 
     public final void runNCycles(int n) {
         for (int i = 0; i < n; i++) {
-            runOneCycle();
+            runOneCycle(true);
         }
     }
 
-    public final boolean runOneCycle() {
+    public final boolean runOneCycle(boolean dumpPipeline) {
         if (emulator.hasMoreInstructions()) {
             if (pipeline.size() == 4) {
+                // pipeline is full, expire last
                 pipeline.pollLast();
             }
 
-            pipeline.addFirst(emulator.emulateOneInstruction());
+            // use-after-load detection
+            final Instruction[] pipelineArr = pipelineAsArray();
+            final Instruction ifId = pipelineArr[0]; // fetch/decode
+            final Instruction idEx = pipelineArr[1]; // decode/execute
+            final Instruction exMe = pipelineArr[2]; // execute/mem
+
+            if (exMe != null && (exMe.opcode() == Opcode.BEQ || exMe.opcode() == Opcode.BNE)) {
+                if (exMe.branchTaken()) {
+
+                }
+            }
+            else if (idEx != null && idEx.opcode() == Opcode.LW) {
+                    final IFormatInstruction loadInst = (IFormatInstruction) idEx;
+                    if (ifId instanceof RFormatInstruction useInst) {
+                        if (!checkAndProceedStall(loadInst, useInst)) {
+                            proceedEmulateOne();
+                        }
+                    } else if (ifId instanceof IFormatInstruction useInst) {
+                        if (!checkAndProceedStall(loadInst, useInst)) {
+                            proceedEmulateOne();
+                        }
+                    } else {
+                        proceedEmulateOne();
+                    }
+            }
+            else {
+                proceedEmulateOne();
+            }
         } else {
             if (pipeline.pollLast() == null) {
                 return false;
             }
         }
 
-        programCounter = emulator().programCounter();
         cycles++;
-        dumpPipelineRegisterState();
+        if (dumpPipeline) dumpPipelineRegisterState();
         return true;
+    }
+
+    private boolean checkAndProceedStall(IFormatInstruction loadInst, IFormatInstruction useInst) {
+        if (loadInst.rt() == useInst.rs()) {
+            checkAndProceedStall0(useInst);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean checkAndProceedStall(IFormatInstruction loadInst, RFormatInstruction useInst) {
+        if (loadInst.rt() == useInst.rs() || loadInst.rt() == useInst.rt()) {
+            checkAndProceedStall0(useInst);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void checkAndProceedStall0(Instruction useInst) {
+        pipeline.removeFirst();
+        pipeline.addFirst(new StallInstruction());
+        pipeline.addFirst(useInst);
+    }
+
+    private void proceedEmulateOne() {
+        pipeline.addFirst(emulator.emulateOneInstruction());
+        programCounter = emulator().programCounter();
     }
 
     public final void printTimingInformation() {
         final int instCount = emulator.instructions().size();
         System.out.printf(
-                "CPI = %.2f\tCycles = %d\tInstructions = %d\n",
+                "CPI = %.3f\tCycles = %d\tInstructions = %d\n",
                 (float) cycles / instCount,
                 cycles,
                 instCount
@@ -93,5 +153,9 @@ public class CPUSimulator {
 
     public Emulator emulator() {
         return emulator;
+    }
+
+    private Instruction[] pipelineAsArray() {
+        return pipeline.toArray(new Instruction[4]);
     }
 }

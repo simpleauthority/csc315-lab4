@@ -13,7 +13,7 @@ public class lab4 {
     public void runProgram(final String[] args) {
         if (args.length < 1) {
             System.err.println("Invalid syntax.");
-            System.err.printf("Syntax: java lab3 <file> [script]%n");
+            System.err.printf("Syntax: java lab4 <file> [script]%n");
             System.exit(1);
             return;
         }

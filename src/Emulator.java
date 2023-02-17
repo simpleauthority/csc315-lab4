@@ -142,12 +142,14 @@ public class Emulator {
                 case BEQ -> {
                     if (rs == rt) {
                         programCounter += 1 + inst.imm();
+                        inst.setBranchTaken(true);
                         return inst;
                     }
                 }
                 case BNE -> {
                     if (rs != rt) {
                         programCounter += 1 + inst.imm();
+                        inst.setBranchTaken(true);
                         return inst;
                     }
                 }
