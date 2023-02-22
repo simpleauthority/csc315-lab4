@@ -8,10 +8,14 @@ public class CPUSimulator {
     private final Deque<Instruction> pipeline;
     private int programCounter;
     private int cycles;
+    private boolean shouldSquashNext;
+    private final Deque<Instruction> afterBranchInstructions;
+    private int actuallyExecutedInstructions;
 
     public CPUSimulator(Emulator emulator) {
         this.emulator = emulator;
         pipeline = new LinkedBlockingDeque<>(4);
+        afterBranchInstructions = new LinkedBlockingDeque<>(2);
         programCounter = 0;
     }
 
@@ -60,49 +64,98 @@ public class CPUSimulator {
     }
 
     public final boolean runOneCycle(boolean dumpPipeline) {
+        if (!afterBranchInstructions.isEmpty()) {
+            if (pipeline.size() == 4) {
+                // pipeline is full, expire last
+                pipeline.pollLast();
+            }
+
+            pretendEmulateOne();
+            programCounter++;
+            finishOneCycle(dumpPipeline);
+            return true;
+        }
+
         if (emulator.hasMoreInstructions()) {
             if (pipeline.size() == 4) {
                 // pipeline is full, expire last
                 pipeline.pollLast();
             }
 
-            // use-after-load detection
             final Instruction[] pipelineArr = pipelineAsArray();
             final Instruction ifId = pipelineArr[0]; // fetch/decode
             final Instruction idEx = pipelineArr[1]; // decode/execute
-            final Instruction exMe = pipelineArr[2]; // execute/mem
+            final Instruction exMe = pipelineArr[2]; // ex/mem
 
-            if (exMe != null && (exMe.opcode() == Opcode.BEQ || exMe.opcode() == Opcode.BNE)) {
-                if (exMe.branchTaken()) {
+            if (shouldSquashNext) {
+                pipeline.addFirst(new SquashInstruction());
+                programCounter = emulator.programCounter();
+                shouldSquashNext = false;
+                finishOneCycle(dumpPipeline);
+                return true;
+            }
 
+            if (ifId != null) {
+                if ((ifId.opcode() == Opcode.BEQ || ifId.opcode() == Opcode.BNE) && ifId.branchTaken()) {
+                    // if we hit a taken branch, grab the next 3 instructions, so we can pretend...
+                    emulator.peekNInstructions(ifId.branchNotTakenPc(), 2)
+                            .forEach(inst -> afterBranchInstructions.addFirst(inst));
+
+                    programCounter = ifId.branchNotTakenPc() + 1;
+
+                    if (!afterBranchInstructions.isEmpty()) {
+                        pretendEmulateOne();
+                    }
+
+                    finishOneCycle(dumpPipeline);
+                    return true;
                 }
             }
-            else if (idEx != null && idEx.opcode() == Opcode.LW) {
+
+            if (idEx != null) {
+                // detect and handle use-after-load
+                if (idEx.opcode() == Opcode.LW) {
                     final IFormatInstruction loadInst = (IFormatInstruction) idEx;
+
                     if (ifId instanceof RFormatInstruction useInst) {
-                        if (!checkAndProceedStall(loadInst, useInst)) {
-                            proceedEmulateOne();
+                        if (checkAndProceedStall(loadInst, useInst)) {
+                            finishOneCycle(dumpPipeline);
+                            return true;
                         }
-                    } else if (ifId instanceof IFormatInstruction useInst) {
-                        if (!checkAndProceedStall(loadInst, useInst)) {
-                            proceedEmulateOne();
-                        }
-                    } else {
-                        proceedEmulateOne();
                     }
+
+                    if (ifId instanceof IFormatInstruction useInst) {
+                        if (checkAndProceedStall(loadInst, useInst)) {
+                            finishOneCycle(dumpPipeline);
+                            return true;
+                        }
+                    }
+                }
             }
-            else {
-                proceedEmulateOne();
+
+            if (exMe != null) {
+                if ((exMe.opcode() == Opcode.BEQ || exMe.opcode() == Opcode.BNE) && exMe.branchTaken()) {
+                    // if we hit a taken branch, we need to squash the prior three instructions
+                    pipeline.clear();
+                    pipeline.addFirst(exMe);
+                    for (int i = 0; i < 3; i++) pipeline.addFirst(new SquashInstruction());
+                    programCounter++;
+                    finishOneCycle(dumpPipeline);
+                    return true;
+                }
             }
-        } else {
-            if (pipeline.pollLast() == null) {
-                return false;
-            }
+
+            proceedEmulateOne();
+            finishOneCycle(dumpPipeline);
+            return true;
         }
 
-        cycles++;
-        if (dumpPipeline) dumpPipelineRegisterState();
-        return true;
+        if (pipeline.pollLast() != null) {
+            finishOneCycle(dumpPipeline);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean checkAndProceedStall(IFormatInstruction loadInst, IFormatInstruction useInst) {
@@ -129,13 +182,31 @@ public class CPUSimulator {
         pipeline.addFirst(useInst);
     }
 
+    private void pretendEmulateOne() {
+        Instruction inst = afterBranchInstructions.pollLast();
+        if (inst != null) {
+            pipeline.addFirst(inst);
+        }
+    }
+
     private void proceedEmulateOne() {
         pipeline.addFirst(emulator.emulateOneInstruction());
-        programCounter = emulator().programCounter();
+
+        if (emulator.hadUncondJump()) {
+            shouldSquashNext = true;
+        }
+
+        programCounter++;
+        actuallyExecutedInstructions++;
+    }
+
+    private void finishOneCycle(boolean dumpPipeline) {
+        cycles++;
+        if (dumpPipeline) dumpPipelineRegisterState();
     }
 
     public final void printTimingInformation() {
-        final int instCount = emulator.instructions().size();
+        final int instCount = actuallyExecutedInstructions;
         System.out.printf(
                 "CPI = %.3f\tCycles = %d\tInstructions = %d\n",
                 (float) cycles / instCount,

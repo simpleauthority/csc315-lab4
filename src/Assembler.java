@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Assembler {
-    private static final Pattern relativeImmediatePattern = Pattern.compile("(\\d)\\((\\$\\w{2,})\\)");
+    private static final Pattern relativeImmediatePattern = Pattern.compile("(\\d)\\((\\$\\w{1,})\\)");
     private static final Pattern opcodeExtractorPattern = Pattern.compile("^(\\w+)");
     private final List<String> lines;
     private final Map<String, Integer> labelAddresses = new HashMap<>();
@@ -114,8 +114,9 @@ public class Assembler {
                                 rs = Register.getByRegisterName(immMatcher.group(2)).number();
                                 immediate = Integer.parseInt(immMatcher.group(1));
                             } else {
-                                throw new RuntimeException("Invalid relative immediate pattern encountered. " +
-                                        "Could not extract rs and immediate value. Syntax immediate(register).");
+                                throw new RuntimeException(String.format("Invalid relative immediate pattern " +
+                                        "encountered. Could not extract rs and immediate value. " +
+                                        "Syntax immediate(register). Instead found \"%s\"", arguments[1].trim()));
                             }
                         } else {
                             if (opcode == Opcode.BEQ || opcode == Opcode.BNE) {

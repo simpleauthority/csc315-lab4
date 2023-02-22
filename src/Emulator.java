@@ -1,5 +1,8 @@
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class Emulator {
     private final List<Instruction> instructions;
@@ -7,6 +10,7 @@ public class Emulator {
     private final int[] memory = new int[8192];
 
     private int programCounter = 0;
+    private boolean hadUncondJump;
 
     public Emulator(List<Instruction> instructions) {
         this.instructions = instructions;
@@ -103,6 +107,18 @@ public class Emulator {
         return instructions;
     }
 
+    public Deque<Instruction> peekNInstructions(int offsetPC, int n) {
+        Deque<Instruction> out = new LinkedBlockingDeque<>();
+
+        for (int i = offsetPC; i < offsetPC + n; i++) {
+            if (i < instructions.size()) {
+                out.addFirst(instructions.get(i));
+            }
+        }
+
+        return out;
+    }
+
     public boolean hasMoreInstructions() {
         return programCounter < instructions.size();
     }
@@ -111,10 +127,16 @@ public class Emulator {
         return programCounter;
     }
 
+    public boolean hadUncondJump() {
+        return hadUncondJump;
+    }
+
     /**
      * Runs a single instruction pointed to by the current program counter.
      */
     public Instruction emulateOneInstruction() {
+        hadUncondJump = false;
+
         final Instruction currentInstruction = instructions.get(programCounter);
 
         if (currentInstruction instanceof RFormatInstruction inst) {
@@ -130,6 +152,7 @@ public class Emulator {
                 case SLT -> writeRegister(inst.rd(), rs < rt ? 1 : 0);
                 case JR -> {
                     programCounter = rs;
+                    hadUncondJump = true;
                     return inst;
                 }
             }
@@ -140,6 +163,7 @@ public class Emulator {
             switch (inst.opcode()) {
                 case ADDI -> writeRegister(inst.rt(), rs + inst.imm());
                 case BEQ -> {
+                    inst.setBranchNotTakenPc(programCounter + 1);
                     if (rs == rt) {
                         programCounter += 1 + inst.imm();
                         inst.setBranchTaken(true);
@@ -147,6 +171,7 @@ public class Emulator {
                     }
                 }
                 case BNE -> {
+                    inst.setBranchNotTakenPc(programCounter + 1);
                     if (rs != rt) {
                         programCounter += 1 + inst.imm();
                         inst.setBranchTaken(true);
@@ -160,11 +185,13 @@ public class Emulator {
             switch (inst.opcode()) {
                 case J -> {
                     programCounter = inst.address();
+                    hadUncondJump = true;
                     return inst;
                 }
                 case JAL -> {
                     writeRegister(31, programCounter + 1);
                     programCounter = inst.address();
+                    hadUncondJump = true;
                     return inst;
                 }
             }
