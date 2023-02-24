@@ -99,7 +99,7 @@ public class CPUSimulator {
                 if ((ifId.opcode() == Opcode.BEQ || ifId.opcode() == Opcode.BNE) && ifId.branchTaken()) {
                     // if we hit a taken branch, grab the next 3 instructions, so we can pretend...
                     emulator.peekNInstructions(ifId.branchNotTakenPc(), 2)
-                            .forEach(inst -> afterBranchInstructions.addFirst(inst));
+                            .forEach(afterBranchInstructions::addFirst);
 
                     programCounter = ifId.branchNotTakenPc() + 1;
 
